@@ -1,0 +1,4 @@
+SESSION_SECRET=dev-only-change-me
+DEMO_MODE=1
+ALLOWED_ORIGINS=http://localhost:5173
+APP_URL=http://localhost:5173

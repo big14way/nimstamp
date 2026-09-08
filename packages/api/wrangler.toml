@@ -1,0 +1,23 @@
+name = "nimstamp-api"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+[triggers]
+crons = ["* * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nimstamp"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+# Non-secret configuration. Secrets (SESSION_SECRET, NIMIQ_RPC_AUTH, PRICE_API_KEY)
+# are set with `wrangler secret put <NAME>` and never committed.
+[vars]
+NIMIQ_RPC_URL = "https://rpc.nimiqwatch.com"
+NIMIQ_NETWORK = "main"
+ALLOWED_ORIGINS = "http://localhost:5173"
+PRICE_SOURCE_URL = "https://api.coingecko.com/api/v3/simple/price?ids=nimiq-2&vs_currencies=usd,eur"
+FX_SOURCE_URL = "https://open.er-api.com/v6/latest/USD"
+APP_URL = "http://localhost:5173"
+DEMO_MODE = "0"
