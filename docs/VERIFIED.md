@@ -15,7 +15,8 @@ against the public mainnet RPC.
 | V6 | **PASS** | `requestDeviceIdentifier({ reason })` → 64-char hex, prompts once per origin; rejects when denied / outside Nimiq Pay. |
 | V7 | **PASS** | `window.nimiqPay.language` (also `getHostLanguage()`), ISO 639-1, seeded before page scripts run. |
 | V8 | **OPEN** | Ask in Skool how to get listed in the Nimiq Pay mini-app directory. Share sheet shows a one-line note that a warning for unlisted apps is normal. |
-| Price id | **PASS** | CoinGecko id `nimiq-2` returns `{ "nimiq-2": { usd, eur } }`. `open.er-api.com/v6/latest/USD` returns `rates.NGN`. |
+| Price id | **PASS, with fallbacks** | CoinGecko id `nimiq-2` works from a laptop but returns **429** from Cloudflare Workers' shared egress IPs, and CoinPaprika's multi-quote endpoint returns 402. Production therefore chains: CoinGecko → KuCoin `NIM-USDT` → Gate.io `NIM_USDT` → CoinPaprika (USD only); EUR/NGN derive from `open.er-api.com` rates when the source has no EUR. `/health` exposes `priceError`. |
+| Cron | **PARTIAL** | The `* * * * *` schedule is registered, but no scheduled invocation was observed in the first ~20 min after the first deploy. The Worker now also runs the maintenance cycle from ordinary GET traffic when the last run is older than 90 s (`source=fallback` in logs), so stamps and prices never depend on the cron alone. |
 | Explorer | **PASS** | `https://nimiq.watch/#<txHash>` (configurable via `VITE_EXPLORER_TX_URL`). |
 
 Decision: **Plan A everywhere** (memo payments + wallet signatures), with Plan B endpoints kept as a safety net.

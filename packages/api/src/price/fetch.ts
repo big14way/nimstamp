@@ -21,25 +21,76 @@ async function getJson(url: string, apiKey?: string): Promise<unknown> {
   }
 }
 
-/** Fetch NIM/USD, NIM/EUR from CoinGecko and USD→NGN from the FX source; store all three. */
+/**
+ * NIM/USD from the first source that answers. Cloudflare's shared egress IPs get rate-limited by
+ * CoinGecko (429) and CoinPaprika's multi-quote endpoint is paid (402), so exchange tickers are the
+ * reliable fallbacks. EUR comes from the primary when present, otherwise from the FX feed.
+ */
+type NimPrice = { usd: number; eur?: number; source: string };
+const SOURCES: { name: string; fetch: (env: Env) => Promise<NimPrice> }[] = [
+  {
+    name: 'primary',
+    fetch: async (env) => {
+      const url = env.PRICE_SOURCE_URL ?? 'https://api.coingecko.com/api/v3/simple/price?ids=nimiq-2&vs_currencies=usd,eur';
+      const json = (await getJson(url, env.PRICE_API_KEY || undefined)) as Record<string, { usd?: number; eur?: number }>;
+      const p = json['nimiq-2'] ?? Object.values(json)[0];
+      return { usd: Number(p?.usd), eur: Number(p?.eur) || undefined, source: 'primary' };
+    },
+  },
+  {
+    name: 'kucoin',
+    fetch: async () => {
+      const json = (await getJson('https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=NIM-USDT')) as { data?: { price?: string } };
+      return { usd: Number(json.data?.price), source: 'kucoin' };
+    },
+  },
+  {
+    name: 'gateio',
+    fetch: async () => {
+      const json = (await getJson('https://api.gateio.ws/api/v4/spot/tickers?currency_pair=NIM_USDT')) as { last?: string }[];
+      return { usd: Number(json[0]?.last), source: 'gateio' };
+    },
+  },
+  {
+    name: 'coinpaprika',
+    fetch: async () => {
+      const json = (await getJson('https://api.coinpaprika.com/v1/tickers/nim-nimiq')) as { quotes?: { USD?: { price?: number } } };
+      return { usd: Number(json.quotes?.USD?.price), source: 'coinpaprika' };
+    },
+  },
+];
+
+async function fetchNimPrice(env: Env): Promise<NimPrice> {
+  const errors: string[] = [];
+  for (const s of SOURCES) {
+    try {
+      const p = await s.fetch(env);
+      if (p.usd > 0) return p;
+      errors.push(`${s.name}: invalid data`);
+    } catch (e) {
+      errors.push(`${s.name}: ${String(e).replace(/^Error: /, '')}`);
+    }
+  }
+  throw new Error(`all price sources failed (${errors.join('; ')})`);
+}
+
+/** Fetch NIM/USD (+EUR) and USD→EUR/NGN from the FX source; store all three. */
 export async function fetchPrices(env: Env): Promise<Record<Currency, number>> {
-  const priceUrl = env.PRICE_SOURCE_URL ?? 'https://api.coingecko.com/api/v3/simple/price?ids=nimiq-2&vs_currencies=usd,eur';
   const fxUrl = env.FX_SOURCE_URL ?? 'https://open.er-api.com/v6/latest/USD';
-  const [priceJson, fxJson] = await Promise.all([getJson(priceUrl, env.PRICE_API_KEY || undefined), getJson(fxUrl)]);
+  const [{ usd, eur, source }, fxJson] = await Promise.all([fetchNimPrice(env), getJson(fxUrl)]);
+  const rates = (fxJson as { rates?: { NGN?: number; EUR?: number } }).rates ?? {};
+  const ngnRate = Number(rates.NGN);
+  const eurRate = Number(rates.EUR);
+  if (!(ngnRate > 0) || !(eurRate > 0)) throw new Error('fx source returned invalid data');
 
-  const p = (priceJson as Record<string, { usd?: number; eur?: number }>)['nimiq-2'] ?? Object.values(priceJson as Record<string, { usd?: number; eur?: number }>)[0];
-  const usd = Number(p?.usd);
-  const eur = Number(p?.eur);
-  const ngnRate = Number((fxJson as { rates?: { NGN?: number } }).rates?.NGN);
-  if (!(usd > 0) || !(eur > 0) || !(ngnRate > 0)) throw new Error('price source returned invalid data');
-
-  const prices: Record<Currency, number> = { USD: usd, EUR: eur, NGN: usd * ngnRate };
+  const prices: Record<Currency, number> = { USD: usd, EUR: eur && eur > 0 ? eur : usd * eurRate, NGN: usd * ngnRate };
   const ts = now();
   await env.DB.batch(
     SUPPORTED_CURRENCIES.map((c) =>
       env.DB.prepare('INSERT INTO prices (currency, nim_price, fetched_at) VALUES (?,?,?) ON CONFLICT(currency) DO UPDATE SET nim_price = excluded.nim_price, fetched_at = excluded.fetched_at').bind(c, prices[c], ts),
     ),
   );
+  console.log(`prices updated source=${source} usd=${usd}`);
   return prices;
 }
 

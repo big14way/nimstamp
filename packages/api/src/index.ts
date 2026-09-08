@@ -59,6 +59,23 @@ app.use('*', async (c, next) => {
   c.header('cache-control', 'no-store');
 });
 
+// ---- self-healing cron: if the scheduled trigger is late (>90 s), ordinary traffic runs the watcher.
+let lastKick = 0;
+app.use('*', async (c, next) => {
+  await next();
+  if (c.req.method !== 'GET' || c.req.path === '/') return;
+  const t = now();
+  if (t - lastKick < 60) return;
+  lastKick = t;
+  c.executionCtx.waitUntil(
+    (async () => {
+      const last = Number((await q.getMeta(c.env.DB, 'lastWatcherRun')) ?? 0);
+      if (t - last < 90) return;
+      await runCycle(c.env, new Date(t * 1000).getUTCMinutes(), 'fallback');
+    })().catch((e) => console.log(`fallback cycle failed: ${String(e)}`)),
+  );
+});
+
 app.get('/', (c) => c.json({ name: 'nimstamp-api', docs: 'https://github.com/big14way/nimstamp' }));
 app.route('/auth', auth);
 app.route('/merchants', merchants);
@@ -75,27 +92,29 @@ app.onError((err, c) => {
   return c.json(new ApiError('INTERNAL').toJSON(), 500);
 });
 
+/** One maintenance cycle: prices (every 10 min or when stale), watcher, hourly cleanup. */
+async function runCycle(env: Env, minute: number, source: 'cron' | 'fallback') {
+  const price = await q.price(env.DB, 'USD');
+  const stale = !price || price.fetched_at < now() - PRICE_MAX_AGE + 600;
+  if (minute % 10 === 0 || stale) {
+    try {
+      await fetchPrices(env);
+      await q.setMeta(env.DB, 'lastPriceError', '');
+    } catch (e) {
+      console.log(`price fetch failed: ${String(e)}`);
+      await q.setMeta(env.DB, 'lastPriceError', String(e).slice(0, 300));
+    }
+  }
+  const results = await runWatcher(env);
+  const stamped = results.reduce((n, r) => n + r.stamped, 0);
+  const errors = results.filter((r) => r.error).length;
+  console.log(`watcher run source=${source} merchants=${results.length} stamped=${stamped} errors=${errors}`);
+  if (minute === 0) await q.cleanup(env.DB);
+}
+
 export default {
   fetch: app.fetch,
   async scheduled(event: ScheduledController, env: Env, ctx: ExecutionContext) {
-    ctx.waitUntil(
-      (async () => {
-        const minute = new Date(event.scheduledTime).getUTCMinutes();
-        const price = await q.price(env.DB, 'USD');
-        const stale = !price || price.fetched_at < now() - PRICE_MAX_AGE + 600;
-        if (minute % 10 === 0 || stale) {
-          try {
-            await fetchPrices(env);
-          } catch (e) {
-            console.log(`price cron failed: ${String(e)}`);
-          }
-        }
-        const results = await runWatcher(env);
-        const stamped = results.reduce((n, r) => n + r.stamped, 0);
-        const errors = results.filter((r) => r.error).length;
-        console.log(`watcher run merchants=${results.length} stamped=${stamped} errors=${errors}`);
-        if (minute === 0) await q.cleanup(env.DB);
-      })(),
-    );
+    ctx.waitUntil(runCycle(env, new Date(event.scheduledTime).getUTCMinutes(), 'cron'));
   },
 } satisfies ExportedHandler<Env>;

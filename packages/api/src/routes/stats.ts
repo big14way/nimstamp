@@ -50,5 +50,6 @@ stats.get('/health', async (c) => {
   }
   const last = await q.getMeta(c.env.DB, 'lastWatcherRun');
   const price = await q.price(c.env.DB, 'USD');
-  return c.json({ ok: true, rpc, height, lastWatcherRun: last ? Number(last) : null, priceFetchedAt: price?.fetched_at ?? null, network: c.env.NIMIQ_NETWORK ?? 'main' }, rpc === 'ok' ? 200 : 503);
+  const priceError = await q.getMeta(c.env.DB, 'lastPriceError');
+  return c.json({ ok: true, rpc, height, lastWatcherRun: last ? Number(last) : null, priceFetchedAt: price?.fetched_at ?? null, priceError: priceError || null, network: c.env.NIMIQ_NETWORK ?? 'main' }, rpc === 'ok' ? 200 : 503);
 });
