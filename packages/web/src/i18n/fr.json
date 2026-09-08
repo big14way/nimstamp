@@ -32,7 +32,8 @@
     "yes": "Oui",
     "viewTx": "Voir la transaction",
     "stampsCount": "{{count}} tampon",
-    "stampsCount_other": "{{count}} tampons"
+    "stampsCount_other": "{{count}} tampons",
+    "edit": "Modifier"
   },
   "connecting": {
     "title": "Connexion à Nimiq Pay…",

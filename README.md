@@ -80,6 +80,9 @@ pnpm test && pnpm typecheck
 ```
 See [docs/DEPLOY.md](docs/DEPLOY.md) for production (Cloudflare Pages + Workers + D1) and [docs/DEVICE_CHECKLIST.md](docs/DEVICE_CHECKLIST.md) for the on-phone acceptance tests.
 
+## Design
+The interface is a recharge scratch card: one committed ultramarine panel on warm paper, punched stamp panels, a silver strip that scratches off to reveal the cashier code, and slab controls in condensed caps for bright counters and mid-range phones. Tokens and rules are documented in [DESIGN.md](DESIGN.md); product truth in [PRODUCT.md](PRODUCT.md). Fonts: Barlow / Barlow Semi Condensed (OFL), self-hosted.
+
 ## Security & privacy
 - No secrets in the repo: `SESSION_SECRET` and optional RPC / price keys are Wrangler secrets; `.env.example` and `.dev.vars.example` are committed with placeholders.
 - Every route validates input with zod; SQL is parameterised; sessions are stored hashed; logs never contain signatures, tokens or device IDs.
@@ -96,6 +99,6 @@ See [docs/DEPLOY.md](docs/DEPLOY.md) for production (Cloudflare Pages + Workers 
 - Lead: Godswill Idolor ([@big14way](https://github.com/big14way))
 
 ## Credits
-[@nimiq/mini-app-sdk](https://www.npmjs.com/package/@nimiq/mini-app-sdk) (MIT) · [Hono](https://hono.dev) (MIT) · [zod](https://zod.dev) (MIT) · [@noble/curves](https://github.com/paulmillr/noble-curves) and [@noble/hashes](https://github.com/paulmillr/noble-hashes) (MIT) · [React](https://react.dev) (MIT) · [react-router](https://reactrouter.com) (MIT) · [i18next](https://www.i18next.com) / [react-i18next](https://react.i18next.com) (MIT) · [qrcode](https://github.com/soldair/node-qrcode) (MIT) · [Tailwind CSS](https://tailwindcss.com) (MIT) · [Vite](https://vite.dev) (MIT) · Cloudflare Workers, Pages and D1 · public Nimiq RPC by [nimiq.watch](https://nimiq.watch) · prices by [CoinGecko](https://www.coingecko.com) and [open.er-api.com](https://open.er-api.com).
+[@nimiq/mini-app-sdk](https://www.npmjs.com/package/@nimiq/mini-app-sdk) (MIT) · [Hono](https://hono.dev) (MIT) · [zod](https://zod.dev) (MIT) · [@noble/curves](https://github.com/paulmillr/noble-curves) and [@noble/hashes](https://github.com/paulmillr/noble-hashes) (MIT) · [React](https://react.dev) (MIT) · [react-router](https://reactrouter.com) (MIT) · [i18next](https://www.i18next.com) / [react-i18next](https://react.i18next.com) (MIT) · [qrcode](https://github.com/soldair/node-qrcode) (MIT) · [Tailwind CSS](https://tailwindcss.com) (MIT) · [Barlow](https://github.com/jpt/barlow) by Jeremy Tribby (OFL) via [Fontsource](https://fontsource.org) · design pass with [Impeccable](https://github.com/pbakaus/impeccable) · [Vite](https://vite.dev) (MIT) · Cloudflare Workers, Pages and D1 · public Nimiq RPC by [nimiq.watch](https://nimiq.watch) · prices by [CoinGecko](https://www.coingecko.com) and [open.er-api.com](https://open.er-api.com).
 
 The Nimiq name is used descriptively ("runs inside Nimiq Pay"); no Nimiq logo or wordmark is used.

@@ -2,10 +2,10 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, session, type Merchant } from '../api/client';
-import { CardPreview } from '../components/CardPreview';
 import { Layout } from '../components/Layout';
 import { QrCode } from '../components/QrCode';
-import { Banner, Button, Card, ErrorState, Field, inputCls } from '../components/ui';
+import { Voucher } from '../components/Voucher';
+import { Button, ErrorState, Field, inputCls, Notice, Sheet } from '../components/ui';
 import { useWalletAvailable } from '../hooks/useWalletAvailable';
 import { errorCode } from '../lib/errors';
 import { links } from '../lib/links';
@@ -143,24 +143,25 @@ export default function MerchantSetup() {
 
   return (
     <Layout back="/">
-      <h1 className="pt-2 text-2xl font-bold">{t('setup.title')}</h1>
-      <div className="mt-2 flex gap-2 text-xs font-semibold">
-        <span className={`rounded-full px-3 py-1 ${step === 1 ? 'bg-ink text-white' : 'bg-line text-ink-soft'}`}>{t('setup.step1')}</span>
-        <span className={`rounded-full px-3 py-1 ${step === 2 ? 'bg-ink text-white' : 'bg-line text-ink-soft'}`}>{t('setup.step2')}</span>
-      </div>
+      <h1 className="t-display pt-2 text-[2rem]">{t('setup.title')}</h1>
+      <ol className="mt-3 flex gap-2" aria-label="steps">
+        {[t('setup.step1'), t('setup.step2')].map((label, i) => (
+          <li key={label} className={`t-label px-3 py-1.5 ${step === i + 1 ? 'bg-ink text-white' : 'border-2 border-rule text-ink-faint'}`}>{label}</li>
+        ))}
+      </ol>
 
       {step === 1 ? (
-        <Card className="mt-4">
+        <Sheet className="mt-5 p-5">
           {available === false ? (
             <div className="text-center">
-              <p className="font-semibold">{t('setup.laptopTitle')}</p>
-              <p className="mt-1 text-sm text-ink-soft">{t('setup.laptopHint')}</p>
+              <p className="t-display text-[1.5rem]">{t('setup.laptopTitle')}</p>
+              <p className="mt-2 text-sm text-ink-soft">{t('setup.laptopHint')}</p>
               {handoff ? (
                 <>
-                  <div className="my-4 flex justify-center"><QrCode value={links.deepLink(`/m/login?handoff=${handoff.nonce}`)} /></div>
-                  <p className="text-xs text-ink-soft">{t('setup.laptopWaiting')}</p>
-                  <a href={links.deepLink(`/m/login?handoff=${handoff.nonce}`)} className="mt-3 inline-block text-sm underline">{t('setup.laptopOpen')}</a>
-                  <p className="mt-3 text-xs text-ink-soft">{t('connecting.unlistedNote')}</p>
+                  <div className="my-5 flex justify-center"><QrCode value={links.deepLink(`/m/login?handoff=${handoff.nonce}`)} /></div>
+                  <p className="t-label pulse-soft text-ink-soft">{t('setup.laptopWaiting')}</p>
+                  <a href={links.deepLink(`/m/login?handoff=${handoff.nonce}`)} className="t-label mt-4 inline-block text-ink underline underline-offset-4">{t('setup.laptopOpen')}</a>
+                  <p className="mt-4 text-xs text-ink-soft">{t('connecting.unlistedNote')}</p>
                 </>
               ) : error ? null : (
                 <p className="my-6 text-sm text-ink-soft">{t('common.loading')}</p>
@@ -170,44 +171,44 @@ export default function MerchantSetup() {
             <>
               <p className="text-sm text-ink-soft">{t('setup.signHint')}</p>
               <div className="mt-4">
-                <Button onClick={() => void signIn()} busy={busy} disabled={available === null}>{busy ? t('setup.signingIn') : t('setup.signIn')}</Button>
+                <Button variant="panel" onClick={() => void signIn()} busy={busy} disabled={available === null}>{busy ? t('setup.signingIn') : t('setup.signIn')}</Button>
               </div>
-              {available === null ? <p className="mt-3 text-center text-xs text-ink-soft">{t('connecting.title')}</p> : null}
+              {available === null ? <p className="t-label mt-3 text-center text-ink-faint">{t('connecting.title')}</p> : null}
             </>
           )}
           {error ? <div className="mt-4"><ErrorState message={t(`errors.${error}`, { defaultValue: t('common.unknownError') })} onRetry={() => setError(null)} /></div> : null}
-        </Card>
+        </Sheet>
       ) : (
-        <form onSubmit={create} className="mt-4 space-y-4 pb-8">
-          <Card className="space-y-4">
-            <Field label={t('setup.businessName')}><input value={name} onChange={(e) => setName(e.target.value)} required minLength={2} maxLength={40} className={inputCls} /></Field>
-            <Field label={t('setup.city')}><input value={city} onChange={(e) => setCity(e.target.value)} maxLength={40} className={inputCls} /></Field>
+        <form onSubmit={create} className="mt-5 space-y-6 pb-8">
+          <div className="space-y-4">
+            <Field label={t('setup.businessName')}><input value={name} onChange={(e) => setName(e.target.value)} required minLength={2} maxLength={40} className={inputCls} autoComplete="organization" /></Field>
+            <Field label={t('setup.city')}><input value={city} onChange={(e) => setCity(e.target.value)} maxLength={40} className={inputCls} autoComplete="address-level2" /></Field>
             <Field label={t('setup.cardTitle')}><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('setup.cardTitlePh')} required minLength={2} maxLength={40} className={inputCls} /></Field>
             <Field label={t('setup.rewardText')}><input value={reward} onChange={(e) => setReward(e.target.value)} placeholder={t('setup.rewardPh')} required minLength={2} maxLength={80} className={inputCls} /></Field>
             <Field label={`${t('setup.stampsRequired')}: ${stampsRequired}`}>
-              <input type="range" min={2} max={20} value={stampsRequired} onChange={(e) => setStampsRequired(Number(e.target.value))} className="w-full accent-accent" />
+              <input type="range" min={2} max={20} value={stampsRequired} onChange={(e) => setStampsRequired(Number(e.target.value))} className="w-full" />
             </Field>
             <div className="grid grid-cols-[1fr_auto] gap-2">
-              <Field label={t('setup.minPurchase')}><input type="number" inputMode="decimal" min={0.01} step="any" value={minAmount} onChange={(e) => setMinAmount(e.target.value)} required className={inputCls} /></Field>
+              <Field label={t('setup.minPurchase')}><input type="number" inputMode="decimal" min={0.01} step="any" value={minAmount} onChange={(e) => setMinAmount(e.target.value)} required className={`${inputCls} t-num`} /></Field>
               <Field label={t('setup.currency')}>
                 <select value={currency} onChange={(e) => setCurrency(e.target.value as 'NGN' | 'USD' | 'EUR')} className={`${inputCls} w-24`}>
                   <option value="NGN">NGN</option><option value="USD">USD</option><option value="EUR">EUR</option>
                 </select>
               </Field>
             </div>
-          </Card>
+          </div>
           <div>
-            <p className="mb-2 text-sm font-semibold text-ink-soft">{t('setup.preview')}</p>
-            <CardPreview name={name} city={city} title={title} rewardText={reward} stampsRequired={stampsRequired} minFiatAmount={Number(minAmount) || 0} fiatCurrency={currency} stamps={Math.min(3, stampsRequired - 1)} />
+            <p className="t-label mb-2 text-ink-soft">{t('setup.preview')}</p>
+            <Voucher name={name} city={city} title={title} rewardText={reward} stampsRequired={stampsRequired} minFiatAmount={Number(minAmount) || 0} fiatCurrency={currency} stamps={Math.min(3, stampsRequired - 1)} compact />
           </div>
           {error ? (
             error === 'MERCHANT_EXISTS' ? (
-              <Banner tone="warn">{t('setup.alreadyHave')} <Link to="/m" className="underline">{t('setup.goDashboard')}</Link></Banner>
+              <Notice tone="warn">{t('setup.alreadyHave')} <Link to="/m" className="font-bold underline underline-offset-4">{t('setup.goDashboard')}</Link></Notice>
             ) : (
               <ErrorState message={t(`errors.${error}`, { defaultValue: t('common.unknownError') })} onRetry={() => setError(null)} />
             )
           ) : null}
-          <Button type="submit" busy={busy}>{busy ? t('setup.creating') : t('setup.create')}</Button>
+          <Button type="submit" variant="panel" busy={busy}>{busy ? t('setup.creating') : t('setup.create')}</Button>
         </form>
       )}
     </Layout>

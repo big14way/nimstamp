@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api, ApiError, type CardPublic, type CustomerCardState } from '../api/client';
 import { Layout } from '../components/Layout';
-import { StampGrid } from '../components/StampGrid';
-import { Banner, Button, Card, ErrorState, Skeleton, useCountdown } from '../components/ui';
+import { Voucher } from '../components/Voucher';
+import { ActionBar, Button, ErrorState, Icon, Notice, Skeleton, useCountdown } from '../components/ui';
 import { useWalletAvailable } from '../hooks/useWalletAvailable';
 import { errorCode } from '../lib/errors';
 import { fiat, mmss, nim } from '../lib/format';
@@ -239,7 +239,7 @@ export default function CardPage() {
         <div className="py-6">
           <ErrorState message={pubError === 'NOT_FOUND' ? t('card.notFound') : t(`errors.${pubError}`, { defaultValue: t('common.unknownError') })} onRetry={pubError === 'NOT_FOUND' ? undefined : loadPub} />
           {pubError === 'NOT_FOUND' ? (
-            <Link to="/" className="mt-4 block text-center text-sm underline">{t('notFound.home')}</Link>
+            <Link to="/" className="t-label mt-4 block text-center text-ink underline underline-offset-4">{t('notFound.home')}</Link>
           ) : null}
         </div>
       </Layout>
@@ -248,11 +248,10 @@ export default function CardPage() {
   if (!pub) {
     return (
       <Layout back="/">
-        <div className="space-y-4 py-4">
-          <Skeleton className="h-7 w-2/3" />
-          <Skeleton className="h-4 w-1/3" />
-          <Skeleton className="h-40 w-full" />
-          <Skeleton className="h-12 w-full" />
+        <div className="space-y-0 py-2">
+          <Skeleton className="h-28 w-full bg-panel/20" />
+          <Skeleton className="mt-4 h-40 w-full" />
+          <Skeleton className="mt-4 h-16 w-full" />
         </div>
       </Layout>
     );
@@ -267,129 +266,122 @@ export default function CardPage() {
   const lastErr = state?.lastIntent?.lastError;
   const showAmountTooLow = lastErr === 'AMOUNT_TOO_LOW' && state?.lastIntent?.status === 'pending';
   const minLabel = fiat(card.minFiatAmount, card.fiatCurrency, i18n.language);
+  const shortAddr = address ? `${address.slice(0, 9)}…${address.slice(-4)}` : '';
 
   return (
     <Layout back="/" footer={false}>
-      <div className="pb-44">
-        <div className="pt-2 pb-4">
-          <h1 className="text-2xl font-bold leading-tight">{merchant.name}</h1>
-          <p className="text-sm text-ink-soft">
-            {merchant.city ? `${merchant.city} · ` : ''}
-            {card.title}
-          </p>
-        </div>
-
-        <Card className={`transition ${earned ? 'ring-4 ring-accent/40' : ''}`}>
-          <StampGrid total={card.stampsRequired} filled={stamps} />
-          <p className="mt-4 text-center text-sm font-semibold">{full ? t('card.full') : t('card.progress', { stamps, required: card.stampsRequired })}</p>
-          <p className="mt-3 text-center text-xs text-ink-soft">
-            {t('card.minPurchase', { amount: minLabel })}
-            {price ? <span> · {t('card.approxNim', { nim: nim(price.minLuna, i18n.language) })}</span> : null}
-          </p>
-          <div className="mt-3 rounded-2xl bg-paper px-4 py-3 text-center text-sm">
-            <span className="font-semibold">{t('card.reward')}:</span> {card.rewardText}
-          </div>
-        </Card>
+      <div className="pb-44 pt-1">
+        <Voucher
+          name={merchant.name}
+          city={merchant.city}
+          title={card.title}
+          rewardText={card.rewardText}
+          stampsRequired={card.stampsRequired}
+          minFiatAmount={card.minFiatAmount}
+          fiatCurrency={card.fiatCurrency}
+          stamps={stamps}
+          minLuna={price?.minLuna ?? null}
+          serial={state?.customerCard.id ?? null}
+          full={full}
+          highlight={earned}
+        />
 
         <div className="mt-4 space-y-3">
           {earned ? (
-            <Banner tone="ok">
-              <span className="font-semibold">✓ {t('card.stampEarned')}</span>
-            </Banner>
+            <Notice tone="ok">
+              <span className="font-bold">{t('card.stampEarned')}</span>
+            </Notice>
           ) : null}
           {phase === 'waiting' ? (
-            <Banner tone="info">
-              <p className="font-medium">{t('card.waiting')}</p>
+            <Notice tone="info">
+              <p className="font-bold">{t('card.waiting')}</p>
               <p className="mt-1 text-xs text-ink-soft">{t('card.waitingHint')}</p>
-            </Banner>
+            </Notice>
           ) : null}
           {slowHint ? (
-            <Banner tone="warn">
-              <p className="font-medium">{t('card.stillWaiting')}</p>
+            <Notice tone="warn">
+              <p className="font-bold">{t('card.stillWaiting')}</p>
               <p className="mt-1 text-xs">{t('card.checkLater')}</p>
-            </Banner>
+            </Notice>
           ) : null}
-          {showAmountTooLow ? <Banner tone="warn">{t('card.amountTooLow')}</Banner> : null}
+          {showAmountTooLow ? <Notice tone="warn">{t('card.amountTooLow')}</Notice> : null}
           {state?.activeRedemption ? (
-            <Banner tone="ok">
+            <Notice tone="ok">
               <div className="flex items-center justify-between gap-3">
-                <span className="font-medium">{t('card.redemptionOpen')}</span>
-                <Link to={`/c/${id}/redeem/${state.activeRedemption.id}`} className="shrink-0 rounded-xl bg-ink px-3 py-2 text-xs font-semibold text-white">{t('card.showCode')}</Link>
+                <span className="font-bold">{t('card.redemptionOpen')}</span>
+                <Link to={`/c/${id}/redeem/${state.activeRedemption.id}`} className="t-label shrink-0 bg-ink px-3 py-2 text-white">{t('card.showCode')}</Link>
               </div>
-            </Banner>
-          ) : null}
-          {askVelocity ? (
-            <Banner tone="warn">
-              <p className="font-medium">{t('card.velocityWarning', { minutes: card.velocityMinutes })}</p>
-              <p className="mt-1 text-xs">{mmss(velocityLeft)}</p>
-              <div className="mt-3 flex gap-2">
-                <Button variant="ghost" className="min-h-10 text-sm" onClick={() => setAskVelocity(null)}>{t('common.notNow')}</Button>
-                <Button variant="secondary" className="min-h-10 text-sm" onClick={() => void pay(true)}>{t('common.yes')}</Button>
-              </div>
-            </Banner>
+            </Notice>
           ) : null}
           {error ? (
             <ErrorState
               message={t(`errors.${error}`, { defaultValue: t('common.unknownError') })}
-              action={error === 'WALLET_UNAVAILABLE' ? <a href={links.openHere()} className="inline-flex min-h-10 items-center justify-center rounded-2xl bg-ink px-4 text-sm font-semibold text-white">{t('common.openInNimiqPay')}</a> : undefined}
+              action={error === 'WALLET_UNAVAILABLE' ? <a href={links.openHere()} className="t-display inline-flex min-h-11 items-center justify-center bg-ink px-4 text-[1.125rem] text-white">{t('common.openInNimiqPay')}</a> : undefined}
               onRetry={error === 'WALLET_UNAVAILABLE' ? undefined : () => setError(null)}
             />
           ) : null}
           {stateError && !error ? <ErrorState message={t(`errors.${stateError}`, { defaultValue: t('common.unknownError') })} onRetry={() => address && void loadState(address)} /> : null}
           {phase === 'connecting' ? (
-            <Banner tone="info">
-              <p className="font-medium">{t('connecting.title')}</p>
+            <Notice tone="info">
+              <p className="font-bold">{t('connecting.title')}</p>
               <p className="mt-1 text-xs text-ink-soft">{t('connecting.hint')}</p>
-            </Banner>
+            </Notice>
           ) : null}
           {phase === 'redeeming' ? (
-            <Banner tone="info">
-              <p className="font-medium">{t('redeem.signing')}</p>
+            <Notice tone="info">
+              <p className="font-bold">{t('redeem.signing')}</p>
               <p className="mt-1 text-xs text-ink-soft">{t('redeem.signHint')}</p>
-            </Banner>
+            </Notice>
           ) : null}
           {available === false && !address ? (
-            <Banner tone="info">
-              <p className="font-medium">{t('card.readOnly')}</p>
+            <Notice tone="info">
+              <p className="font-bold">{t('card.readOnly')}</p>
               <p className="mt-1 text-xs text-ink-soft">{t('connecting.unlistedNote')}</p>
-            </Banner>
+            </Notice>
           ) : null}
           {address ? (
-            <p className="text-center text-xs text-ink-soft">
-              {t('card.connectedAs', { address: `${address.slice(0, 9)}…${address.slice(-4)}` })}{' '}
-              <button type="button" onClick={disconnect} className="underline">{t('card.notYou')}</button>
+            <p className="t-num text-center text-xs text-ink-soft">
+              {t('card.connectedAs', { address: shortAddr })}{' '}
+              <button type="button" onClick={disconnect} className="font-bold text-ink underline underline-offset-4">{t('card.notYou')}</button>
             </p>
           ) : null}
           {!address && available !== false ? <p className="text-center text-xs text-ink-soft">{t('card.youCanEdit')}</p> : null}
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-paper/95 backdrop-blur">
-        <div className="mx-auto w-full max-w-md space-y-2 px-4 pt-3 safe-bottom">
-          {!address ? (
-            available === false ? (
-              <a href={links.openHere()} className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-accent px-5 text-base font-semibold text-ink">{t('common.openInNimiqPay')}</a>
-            ) : (
-              <Button onClick={() => void connect()} busy={phase === 'connecting'} disabled={available === null}>{t('card.connect')}</Button>
-            )
-          ) : full ? (
-            <>
-              <Button onClick={() => void redeem()} busy={phase === 'redeeming'} disabled={busy || !!state?.activeRedemption}>{t('card.redeem')}</Button>
-              <Button variant="ghost" onClick={() => void pay()} busy={phase === 'paying' || phase === 'creatingIntent'} disabled={busy}>{t('card.pay')}</Button>
-            </>
-          ) : (
-            <>
-              <Button onClick={() => void pay()} busy={phase === 'paying' || phase === 'creatingIntent'} disabled={busy || available === false}>
-                {price ? t('card.payAmount', { amount: minLabel }) : t('card.pay')}
-              </Button>
-              <Button variant="ghost" disabled className="min-h-10 text-sm">{t('card.redeemLocked')}</Button>
-            </>
-          )}
-          <div className="flex justify-center pb-1">
-            <Link to={`/c/${id}/claim`} className="text-xs text-ink-soft underline-offset-2 hover:underline">{t('card.noStamp')}</Link>
+      <ActionBar>
+        {askVelocity ? (
+          <div className="rise">
+            <p className="flex gap-2 text-sm font-bold leading-snug"><Icon.Alert className="mt-0.5 shrink-0 text-alert" />{t('card.velocityWarning', { minutes: card.velocityMinutes })}</p>
+            <p className="t-num mt-1 flex items-center gap-1 pl-7 text-xs text-ink-soft"><Icon.Clock className="h-4 w-4" />{mmss(velocityLeft)}</p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <Button variant="outline" onClick={() => setAskVelocity(null)}>{t('common.notNow')}</Button>
+              <Button variant="ink" onClick={() => void pay(true)}>{t('common.yes')}</Button>
+            </div>
           </div>
+        ) : !address ? (
+          available === false ? (
+            <a href={links.openHere()} className="t-display inline-flex min-h-13 w-full items-center justify-center bg-panel px-5 text-[1.25rem] text-white">{t('common.openInNimiqPay')}</a>
+          ) : (
+            <Button variant="panel" onClick={() => void connect()} busy={phase === 'connecting'} disabled={available === null}>{t('card.connect')}</Button>
+          )
+        ) : full ? (
+          <>
+            <Button variant="panel" onClick={() => void redeem()} busy={phase === 'redeeming'} disabled={busy || !!state?.activeRedemption}>{t('card.redeem')}</Button>
+            <Button variant="outline" onClick={() => void pay()} busy={phase === 'paying' || phase === 'creatingIntent'} disabled={busy}>{t('card.pay')}</Button>
+          </>
+        ) : (
+          <>
+            <Button variant="ink" onClick={() => void pay()} busy={phase === 'paying' || phase === 'creatingIntent'} disabled={busy || available === false}>
+              {price ? t('card.payAmount', { amount: minLabel }) : t('card.pay')}
+            </Button>
+            <p className="t-label text-center text-ink-faint">{t('card.redeemLocked')}</p>
+          </>
+        )}
+        <div className="flex justify-center pb-1">
+          <Link to={`/c/${id}/claim`} className="text-xs font-bold text-ink-soft underline-offset-4 hover:underline">{t('card.noStamp')}</Link>
         </div>
-      </div>
+      </ActionBar>
     </Layout>
   );
 }

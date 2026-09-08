@@ -4,7 +4,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { api, session, type Redemption, type Stamp } from '../api/client';
 import { Layout } from '../components/Layout';
 import { QrCode } from '../components/QrCode';
-import { Banner, Button, Card, CopyField, EmptyState, ErrorState, Field, inputCls, Skeleton } from '../components/ui';
+import { Button, CopyField, EmptyState, ErrorState, Field, Icon, inputCls, Notice, Rule, Skeleton } from '../components/ui';
 import { useMerchant } from '../hooks/useSession';
 import { errorCode } from '../lib/errors';
 import { fiat, nim, shortHash, timeAgo } from '../lib/format';
@@ -55,7 +55,7 @@ export default function MerchantDashboard() {
   if (loading && !me) {
     return (
       <Layout>
-        <div className="space-y-4 py-4"><Skeleton className="h-8 w-1/2" /><Skeleton className="h-40 w-full" /><Skeleton className="h-24 w-full" /><Skeleton className="h-64 w-full" /></div>
+        <div className="space-y-4 py-4"><Skeleton className="h-10 w-1/2" /><Skeleton className="h-12 w-full" /><Skeleton className="h-64 w-full" /><Skeleton className="h-40 w-full" /></div>
       </Layout>
     );
   }
@@ -89,7 +89,6 @@ export default function MerchantDashboard() {
       document.body.appendChild(a);
       a.click();
       a.remove();
-      // WebViews may ignore download attributes: also open in a new tab as fallback
       if (/nimiq|wv|webview/i.test(navigator.userAgent)) window.open(url, '_blank');
     } finally {
       setTentBusy(false);
@@ -140,125 +139,147 @@ export default function MerchantDashboard() {
     }
   };
 
+  const watcherLine = me.watcher?.error
+    ? t('dash.watcherError', { error: me.watcher.error })
+    : me.watcher?.lastPolledAt
+      ? t('dash.watcherOk', { when: timeAgo(me.watcher.lastPolledAt, i18n.language) })
+      : t('dash.watcherNever');
+
   return (
     <Layout>
-      <div className="flex items-start justify-between pt-2">
-        <div>
-          <h1 className="text-2xl font-bold leading-tight">{merchant.name}</h1>
-          <p className="text-sm text-ink-soft">{merchant.city ? `${merchant.city} · ` : ''}{card.title}</p>
+      <div className="flex items-start justify-between gap-3 pt-2">
+        <div className="min-w-0">
+          <p className="t-label text-ink-soft">{card.title}</p>
+          <h1 className="t-display mt-1 text-[2rem]">{merchant.name}</h1>
+          {merchant.city ? <p className="text-sm text-ink-soft">{merchant.city}</p> : null}
         </div>
-        <button type="button" onClick={() => void logout()} className="text-xs text-ink-soft underline">{t('nav.logout')}</button>
+        <button type="button" onClick={() => void logout()} className="t-label min-h-11 shrink-0 text-ink-soft underline-offset-4 hover:underline">{t('nav.logout')}</button>
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-2">
+      {/* till-roll totals: one ruled ledger line, tabular */}
+      <dl className="t-num mt-5 grid grid-cols-3 divide-x-2 divide-ink border-y-2 border-ink">
         {[
           [t('dash.customers'), stats.customers],
           [t('dash.stamps'), stats.stamps],
           [t('dash.redemptions'), stats.redemptions],
         ].map(([label, n]) => (
-          <Card key={String(label)} className="p-3 text-center"><p className="text-2xl font-bold">{n}</p><p className="text-xs text-ink-soft">{label}</p></Card>
+          <div key={String(label)} className="px-3 py-3">
+            <dt className="t-label text-ink-soft">{label}</dt>
+            <dd className="t-display mt-0.5 text-[2rem] leading-none">{n}</dd>
+          </div>
         ))}
-      </div>
+      </dl>
+      <p className={`t-num mt-2 flex items-center gap-1.5 text-xs ${me.watcher?.error ? 'text-alert' : 'text-ink-soft'}`}><Icon.Clock className="h-3.5 w-3.5" />{watcherLine}</p>
 
-      <Card className="mt-4">
-        <p className="font-semibold">{t('dash.shareTitle')}</p>
-        <p className="mt-1 text-xs text-ink-soft">{t('dash.shareHint')}</p>
-        <div className="mt-3 space-y-3">
+      <section className="mt-8">
+        <Rule>{t('dash.shareTitle')}</Rule>
+        <p className="mt-3 text-sm text-ink-soft">{t('dash.shareHint')}</p>
+        <div className="mt-4 space-y-4">
           <CopyField label={t('dash.link')} value={shareUrl} />
           <CopyField label={t('dash.deepLink')} value={deepLink} />
         </div>
-        <div className="mt-4 flex justify-center"><QrCode value={deepLink} size={180} /></div>
-        <p className="mt-2 text-center text-xs text-ink-soft">{t('connecting.unlistedNote')}</p>
-        <div className="mt-4">
-          <Button variant="secondary" onClick={() => void downloadTent()} busy={tentBusy}>{t('dash.tableTent')}</Button>
-          <p className="mt-1 text-center text-xs text-ink-soft">{t('dash.tableTentHint')}</p>
+        <div className="mt-5 flex items-center gap-4 border-2 border-ink p-3">
+          <QrCode value={deepLink} size={128} className="shrink-0" />
+          <div className="min-w-0">
+            <p className="t-label text-ink-soft">{t('dash.tableTentHint')}</p>
+            <Button variant="ink" onClick={() => void downloadTent()} busy={tentBusy} className="mt-3 min-h-11 text-[1rem]">
+              <Icon.Down className="h-4 w-4" />{t('dash.tableTent')}
+            </Button>
+          </div>
         </div>
-        <p className="mt-4 text-xs text-ink-soft"><span className="font-medium">{t('dash.address')}:</span> <span className="font-mono">{merchant.address}</span></p>
-        <p className="mt-2 text-xs text-ink-soft">
-          {me.watcher?.error ? t('dash.watcherError', { error: me.watcher.error }) : me.watcher?.lastPolledAt ? t('dash.watcherOk', { when: timeAgo(me.watcher.lastPolledAt, i18n.language) }) : t('dash.watcherNever')}
-        </p>
-      </Card>
+        <p className="mt-3 text-xs text-ink-soft">{t('connecting.unlistedNote')}</p>
+        <p className="t-num mt-3 text-xs text-ink-soft"><span className="t-label">{t('dash.address')}</span><br /><span className="font-mono text-ink">{merchant.address}</span></p>
+      </section>
 
-      <Card className="mt-4">
-        <div className="flex items-center justify-between">
-          <p className="font-semibold">{t('dash.editCard')}</p>
-          {!editing ? <button type="button" onClick={() => setEditing(true)} className="text-sm underline">{t('dash.editCard')}</button> : null}
+      <section className="mt-8">
+        <div className="flex items-center gap-3">
+          <Rule className="flex-1">{t('dash.editCard')}</Rule>
+          {!editing ? <button type="button" onClick={() => setEditing(true)} className="t-label min-h-11 text-ink underline underline-offset-4">{t('common.edit')}</button> : null}
         </div>
-        <p className="mt-1 text-xs text-ink-soft">{t('dash.editHint')}</p>
-        {saved ? <Banner tone="ok">{t('dash.saved')}</Banner> : null}
+        <p className="mt-2 text-xs text-ink-soft">{t('dash.editHint')}</p>
+        {saved ? <div className="mt-3"><Notice tone="ok">{t('dash.saved')}</Notice></div> : null}
         {editing ? (
-          <form onSubmit={save} className="mt-3 space-y-3">
+          <form onSubmit={save} className="mt-4 space-y-4">
             <Field label={t('setup.cardTitle')}><input name="title" defaultValue={card.title} required minLength={2} maxLength={40} className={inputCls} /></Field>
             <Field label={t('setup.rewardText')}><input name="rewardText" defaultValue={card.rewardText} required minLength={2} maxLength={80} className={inputCls} /></Field>
-            <Field label={t('setup.stampsRequired')}><input name="stampsRequired" type="number" min={2} max={20} defaultValue={card.stampsRequired} required className={inputCls} /></Field>
+            <Field label={t('setup.stampsRequired')}><input name="stampsRequired" type="number" min={2} max={20} defaultValue={card.stampsRequired} required className={`${inputCls} t-num`} /></Field>
             <div className="grid grid-cols-[1fr_auto] gap-2">
-              <Field label={t('setup.minPurchase')}><input name="minFiatAmount" type="number" inputMode="decimal" min={0.01} step="any" defaultValue={card.minFiatAmount} required className={inputCls} /></Field>
+              <Field label={t('setup.minPurchase')}><input name="minFiatAmount" type="number" inputMode="decimal" min={0.01} step="any" defaultValue={card.minFiatAmount} required className={`${inputCls} t-num`} /></Field>
               <Field label={t('setup.currency')}>
                 <select name="fiatCurrency" defaultValue={card.fiatCurrency} className={`${inputCls} w-24`}><option value="NGN">NGN</option><option value="USD">USD</option><option value="EUR">EUR</option></select>
               </Field>
             </div>
-            <Field label={t('dash.velocity')}><input name="velocityMinutes" type="number" min={10} max={60} defaultValue={card.velocityMinutes} required className={inputCls} /></Field>
+            <Field label={t('dash.velocity')}><input name="velocityMinutes" type="number" min={10} max={60} defaultValue={card.velocityMinutes} required className={`${inputCls} t-num`} /></Field>
             {saveError ? <ErrorState message={t(`errors.${saveError}`, { defaultValue: t('common.unknownError') })} /> : null}
-            <div className="flex gap-2">
-              <Button variant="ghost" type="button" onClick={() => setEditing(false)}>{t('common.cancel')}</Button>
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" type="button" onClick={() => setEditing(false)}>{t('common.cancel')}</Button>
               <Button type="submit" busy={saveBusy}>{saveBusy ? t('common.saving') : t('common.save')}</Button>
             </div>
           </form>
         ) : (
-          <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
-            <dt className="text-ink-soft">{t('setup.rewardText')}</dt><dd>{card.rewardText}</dd>
-            <dt className="text-ink-soft">{t('setup.stampsRequired')}</dt><dd>{card.stampsRequired}</dd>
-            <dt className="text-ink-soft">{t('setup.minPurchase')}</dt><dd>{fiat(card.minFiatAmount, card.fiatCurrency, i18n.language)}</dd>
-            <dt className="text-ink-soft">{t('dash.velocity')}</dt><dd>{card.velocityMinutes}</dd>
+          <dl className="t-num mt-3 divide-y divide-rule text-sm">
+            {[
+              [t('setup.rewardText'), card.rewardText],
+              [t('setup.stampsRequired'), card.stampsRequired],
+              [t('setup.minPurchase'), fiat(card.minFiatAmount, card.fiatCurrency, i18n.language)],
+              [t('dash.velocity'), card.velocityMinutes],
+            ].map(([k, v]) => (
+              <div key={String(k)} className="flex items-baseline justify-between gap-4 py-2">
+                <dt className="text-ink-soft">{k}</dt>
+                <dd className="text-right font-bold">{v}</dd>
+              </div>
+            ))}
           </dl>
         )}
-      </Card>
+      </section>
 
-      <section className="mt-4 pb-8">
-        <h2 className="mb-2 font-semibold">{t('dash.activity')}</h2>
-        {actError ? <ErrorState message={t(`errors.${actError}`, { defaultValue: t('common.unknownError') })} onRetry={loadActivity} /> : null}
-        {!activity && !actError ? <Skeleton className="h-32 w-full" /> : null}
-        {activity && activity.stamps.length === 0 && activity.redemptions.length === 0 ? (
-          <EmptyState title={t('dash.noActivity')}>
-            <Link to={`/c/${card.id}`} className="text-sm underline">{t('card.share')}</Link>
-          </EmptyState>
-        ) : null}
-        {activity && activity.redemptions.length > 0 ? (
-          <Card className="mb-3 p-0">
-            <p className="px-4 pt-3 text-xs font-semibold uppercase tracking-wide text-ink-soft">{t('dash.redemptionsList')}</p>
-            <ul className="divide-y divide-line">
-              {activity.redemptions.map((r) => (
-                <li key={r.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                  <div>
-                    <p className="font-mono text-lg font-bold tracking-widest">{r.code}</p>
-                    <p className="text-xs text-ink-soft">{r.customer} · {timeAgo(r.issuedAt, i18n.language)}</p>
-                  </div>
-                  {r.status === 'issued' ? (
-                    <Button variant="secondary" className="w-auto min-h-10 px-3 text-xs" onClick={() => void confirm(r.id)} busy={confirming === r.id}>{t('dash.confirmRedemption')}</Button>
-                  ) : (
-                    <span className={`rounded-full px-2 py-1 text-xs ${r.status === 'confirmed' ? 'bg-ok/10 text-ok' : 'bg-line text-ink-soft'}`}>{r.status === 'confirmed' ? t('dash.confirmed') : t('dash.expired')}</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </Card>
-        ) : null}
-        {activity && activity.stamps.length > 0 ? (
-          <Card className="p-0">
-            <p className="px-4 pt-3 text-xs font-semibold uppercase tracking-wide text-ink-soft">{t('dash.stampsList')}</p>
-            <ul className="divide-y divide-line">
-              {activity.stamps.map((s) => (
-                <li key={s.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                  <div>
-                    <p className="font-medium">{s.customer}{!s.counted ? <span className="ml-2 text-xs text-ink-soft">({t('dash.notCounted')})</span> : null}</p>
-                    <p className="text-xs text-ink-soft">{t('dash.receipt', { amount: nim(s.amountLuna, i18n.language) })} · {timeAgo(s.createdAt, i18n.language)}</p>
-                  </div>
-                  <a href={links.tx(s.txHash)} target="_blank" rel="noreferrer" className="shrink-0 font-mono text-xs underline">{shortHash(s.txHash)}</a>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        ) : null}
+      <section className="mt-8 pb-10">
+        <Rule>{t('dash.activity')}</Rule>
+        <div className="mt-4 space-y-6">
+          {actError ? <ErrorState message={t(`errors.${actError}`, { defaultValue: t('common.unknownError') })} onRetry={loadActivity} /> : null}
+          {!activity && !actError ? <Skeleton className="h-32 w-full" /> : null}
+          {activity && activity.stamps.length === 0 && activity.redemptions.length === 0 ? (
+            <EmptyState title={t('dash.noActivity')}>
+              <Link to={`/c/${card.id}`} className="t-label text-ink underline underline-offset-4">{t('card.share')}</Link>
+            </EmptyState>
+          ) : null}
+          {activity && activity.redemptions.length > 0 ? (
+            <div>
+              <p className="t-label text-ink-soft">{t('dash.redemptionsList')}</p>
+              <ul className="mt-2 divide-y-2 divide-rule border-y-2 border-ink">
+                {activity.redemptions.map((r) => (
+                  <li key={r.id} className="flex items-center justify-between gap-3 py-3 text-sm">
+                    <div className="min-w-0">
+                      <p className="t-display t-num text-[1.75rem] leading-none tracking-[0.12em]">{r.code}</p>
+                      <p className="t-num mt-1 text-xs text-ink-soft">{r.customer} · {timeAgo(r.issuedAt, i18n.language)}</p>
+                    </div>
+                    {r.status === 'issued' ? (
+                      <Button variant="ink" className="w-auto min-h-11 px-4 text-[1rem]" onClick={() => void confirm(r.id)} busy={confirming === r.id}>{t('dash.confirmRedemption')}</Button>
+                    ) : (
+                      <span className={`t-label ${r.status === 'confirmed' ? 'text-ok' : 'text-ink-faint'}`}>{r.status === 'confirmed' ? t('dash.confirmed') : t('dash.expired')}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {activity && activity.stamps.length > 0 ? (
+            <div>
+              <p className="t-label text-ink-soft">{t('dash.stampsList')}</p>
+              <ul className="mt-2 divide-y divide-rule border-y-2 border-ink">
+                {activity.stamps.map((s) => (
+                  <li key={s.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                    <div className="min-w-0">
+                      <p className="t-num font-bold">{s.customer}{!s.counted ? <span className="ml-2 text-xs font-medium text-ink-soft">({t('dash.notCounted')})</span> : null}</p>
+                      <p className="t-num text-xs text-ink-soft">{t('dash.receipt', { amount: nim(s.amountLuna, i18n.language) })} · {timeAgo(s.createdAt, i18n.language)}</p>
+                    </div>
+                    <a href={links.tx(s.txHash)} target="_blank" rel="noreferrer" className="t-num inline-flex shrink-0 items-center gap-1 font-mono text-xs text-ink underline underline-offset-4"><Icon.Link className="h-3.5 w-3.5" />{shortHash(s.txHash)}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
       </section>
     </Layout>
   );

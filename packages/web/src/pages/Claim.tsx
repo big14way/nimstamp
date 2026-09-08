@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { api, type Stamp } from '../api/client';
 import { Layout } from '../components/Layout';
-import { Banner, Button, Card, ErrorState, Field, inputCls } from '../components/ui';
+import { Button, ErrorState, Field, Icon, inputCls, Notice } from '../components/ui';
 import { errorCode } from '../lib/errors';
 import { links } from '../lib/links';
 import { store } from '../lib/storage';
@@ -38,27 +38,27 @@ export default function Claim() {
 
   return (
     <Layout back={`/c/${id}`}>
-      <h1 className="pt-2 text-2xl font-bold">{t('claim.title')}</h1>
-      <p className="mt-1 text-sm text-ink-soft">{t('claim.intro')}</p>
+      <h1 className="t-display pt-2 text-[2rem]">{t('claim.title')}</h1>
+      <p className="mt-2 max-w-[38ch] text-[0.9375rem] text-ink-soft">{t('claim.intro')}</p>
       {!ccId ? (
-        <div className="mt-4">
-          <ErrorState message={t('card.connectHint')} action={<Link to={`/c/${id}`} className="inline-flex min-h-10 items-center justify-center rounded-2xl bg-ink px-4 text-sm font-semibold text-white">{t('claim.backToCard')}</Link>} />
+        <div className="mt-5">
+          <ErrorState message={t('card.connectHint')} action={<Link to={`/c/${id}`} className="t-label self-start bg-ink px-3 py-2 text-white">{t('claim.backToCard')}</Link>} />
         </div>
       ) : result ? (
-        <Card className="mt-4">
-          <Banner tone={result.counted ? 'ok' : 'warn'}>
-            <p className="font-semibold">{result.counted ? `✓ ${t('claim.success')}` : t('claim.successNotCounted')}</p>
-          </Banner>
-          <a href={links.tx(result.stamp.txHash)} target="_blank" rel="noreferrer" className="mt-3 block text-center text-xs underline">{t('common.viewTx')}</a>
-          <Link to={`/c/${id}`} className="mt-4 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-accent px-5 font-semibold text-ink">{t('claim.backToCard')}</Link>
-        </Card>
+        <div className="mt-5 space-y-4">
+          <Notice tone={result.counted ? 'ok' : 'warn'}>
+            <p className="font-bold">{result.counted ? t('claim.success') : t('claim.successNotCounted')}</p>
+            <a href={links.tx(result.stamp.txHash)} target="_blank" rel="noreferrer" className="t-label mt-2 inline-flex items-center gap-1 text-ink underline underline-offset-4"><Icon.Link className="h-4 w-4" />{t('common.viewTx')}</a>
+          </Notice>
+          <Link to={`/c/${id}`} className="t-display inline-flex min-h-13 w-full items-center justify-center bg-ink px-5 text-[1.25rem] text-white">{t('claim.backToCard')}</Link>
+        </div>
       ) : (
-        <form onSubmit={submit} className="mt-4 space-y-4">
+        <form onSubmit={submit} className="mt-5 space-y-4">
           <Field label={t('claim.label')}>
-            <textarea value={hash} onChange={(e) => setHash(e.target.value)} placeholder={t('claim.placeholder')} rows={3} required className={`${inputCls} py-3 font-mono text-sm`} spellCheck={false} autoCapitalize="none" autoCorrect="off" />
+            <textarea value={hash} onChange={(e) => setHash(e.target.value)} placeholder={t('claim.placeholder')} rows={3} required className={`${inputCls} t-num py-3 font-mono text-sm`} spellCheck={false} autoCapitalize="none" autoCorrect="off" />
           </Field>
-          <button type="button" onClick={() => setShowHint((s) => !s)} className="text-sm underline">{t('claim.where')}</button>
-          {showHint ? <Banner tone="info">{t('claim.whereHint')}</Banner> : null}
+          <button type="button" onClick={() => setShowHint((s) => !s)} className="t-label text-ink underline underline-offset-4">{t('claim.where')}</button>
+          {showHint ? <Notice tone="info">{t('claim.whereHint')}</Notice> : null}
           {error ? <ErrorState message={t(`errors.${error}`, { defaultValue: t('common.unknownError') })} onRetry={() => setError(null)} /> : null}
           <Button type="submit" busy={busy} disabled={hash.trim().length < 64}>{busy ? t('claim.checking') : t('claim.submit')}</Button>
         </form>

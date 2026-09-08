@@ -32,7 +32,8 @@
     "yes": "Ja",
     "viewTx": "Transaktion ansehen",
     "stampsCount": "{{count}} Stempel",
-    "stampsCount_other": "{{count}} Stempel"
+    "stampsCount_other": "{{count}} Stempel",
+    "edit": "Bearbeiten"
   },
   "connecting": {
     "title": "Verbinde mit Nimiq Pay…",

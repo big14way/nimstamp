@@ -9,7 +9,7 @@ export default function NotFound() {
     <Layout>
       <div className="py-10">
         <EmptyState title={t('notFound.title')} hint={t('notFound.hint')}>
-          <Link to="/" className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-accent px-5 font-semibold text-ink">{t('notFound.home')}</Link>
+          <Link to="/" className="t-display inline-flex min-h-12 items-center justify-center bg-ink px-5 text-[1.125rem] text-white">{t('notFound.home')}</Link>
         </EmptyState>
       </div>
     </Layout>

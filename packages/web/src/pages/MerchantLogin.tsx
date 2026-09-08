@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
-import { Banner, Button, Card, ErrorState } from '../components/ui';
+import { Button, ErrorState, Notice, Sheet } from '../components/ui';
 import { useWalletAvailable } from '../hooks/useWalletAvailable';
 import { errorCode } from '../lib/errors';
 import { links } from '../lib/links';
@@ -39,31 +39,31 @@ export default function MerchantLogin() {
 
   return (
     <Layout>
-      <h1 className="pt-2 text-2xl font-bold">{t('setup.step1')}</h1>
-      <Card className="mt-4">
+      <h1 className="t-display pt-2 text-[2rem]">{t('setup.step1')}</h1>
+      <Sheet className="mt-5 p-5">
         {done ? (
-          <Banner tone="ok">
-            <p className="font-semibold">✓ {t('setup.loginDone')}</p>
+          <Notice tone="ok">
+            <p className="font-bold">{t('setup.loginDone')}</p>
             <p className="mt-1 text-xs">{t('setup.loginDoneHint')}</p>
-            <Link to={done.hasMerchant ? '/m' : '/m/setup'} className="mt-3 inline-block text-sm underline">{t('common.continue')}</Link>
-          </Banner>
+            <Link to={done.hasMerchant ? '/m' : '/m/setup'} className="t-label mt-3 inline-block text-ink underline underline-offset-4">{t('common.continue')}</Link>
+          </Notice>
         ) : (
           <>
             <p className="text-sm text-ink-soft">{t('setup.signHint')}</p>
             {available === false ? (
-              <div className="mt-4 space-y-3">
-                <ErrorState message={t('errors.WALLET_UNAVAILABLE')} action={<a href={links.openHere()} className="inline-flex min-h-10 items-center justify-center rounded-2xl bg-ink px-4 text-sm font-semibold text-white">{t('common.openInNimiqPay')}</a>} />
+              <div className="mt-4">
+                <ErrorState message={t('errors.WALLET_UNAVAILABLE')} action={<a href={links.openHere()} className="t-label self-start bg-ink px-3 py-2 text-white">{t('common.openInNimiqPay')}</a>} />
               </div>
             ) : (
               <div className="mt-4">
-                <Button onClick={() => void signIn()} busy={busy} disabled={available === null}>{busy ? t('setup.signingIn') : t('setup.signIn')}</Button>
-                {available === null ? <p className="mt-3 text-center text-xs text-ink-soft">{t('connecting.title')}{slow ? ` ${t('connecting.hint')}` : ''}</p> : null}
+                <Button variant="panel" onClick={() => void signIn()} busy={busy} disabled={available === null}>{busy ? t('setup.signingIn') : t('setup.signIn')}</Button>
+                {available === null ? <p className="t-label mt-3 text-center text-ink-faint">{t('connecting.title')}{slow ? ` ${t('connecting.hint')}` : ''}</p> : null}
               </div>
             )}
             {error ? <div className="mt-4"><ErrorState message={t(`errors.${error}`, { defaultValue: t('common.unknownError') })} onRetry={() => setError(null)} /></div> : null}
           </>
         )}
-      </Card>
+      </Sheet>
     </Layout>
   );
 }
