@@ -87,9 +87,10 @@ See [docs/DEPLOY.md](docs/DEPLOY.md) for production (Cloudflare Pages + Workers 
 - Privacy notice: [docs/PRIVACY.md](docs/PRIVACY.md), served at `/privacy` in four languages. Device-ID request carries the reason "Prevent duplicate loyalty cards on this phone".
 
 ## Live app
-- Web: _pending deployment_
-- API health: _pending deployment_
-- Stats: `/stats`
+- Web: https://nimstamp.vercel.app (Vercel)
+- Open inside Nimiq Pay: https://nimpay.app/miniapps/open/nimstamp.vercel.app
+- API: https://nimstamp-api.nimstamp.workers.dev ([health](https://nimstamp-api.nimstamp.workers.dev/health)) — Cloudflare Worker + D1
+- Stats: https://nimstamp.vercel.app/stats
 
 ## Team
 - Lead: Godswill Idolor ([@big14way](https://github.com/big14way))

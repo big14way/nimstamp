@@ -22,7 +22,17 @@ curl https://api.nimstamp.example/health          # expect {"ok":true,"rpc":"ok"
 ```
 The cron trigger (`* * * * *`) is created by the deploy. Add the custom domain under Workers → Settings → Domains & Routes.
 
-## 2. Web (Pages)
+## 2. Web (Vercel — current production)
+```bash
+cd packages/web
+vercel link --yes --project nimstamp
+for k in VITE_API_BASE VITE_WALLET VITE_APP_URL VITE_EXPLORER_TX_URL; do printf '%s' "$VALUE" | vercel env add $k production --force; done
+vercel deploy --prod --yes
+```
+`vercel.json` installs with npm inside `packages/web` (no workspace needed), builds with `vite build`, rewrites all routes to `index.html`, and sets HSTS/nosniff/cache headers.
+Production: https://nimstamp.vercel.app · API: https://nimstamp-api.nimstamp.workers.dev
+
+## 2b. Web (Cloudflare Pages — alternative)
 Create a Pages project from the GitHub repo (production branch `main`):
 - Build command: `pnpm install --frozen-lockfile && pnpm --filter @nimstamp/web build`
 - Build output directory: `packages/web/dist`

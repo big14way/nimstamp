@@ -9,15 +9,15 @@ crons = ["* * * * *"]
 [[d1_databases]]
 binding = "DB"
 database_name = "nimstamp"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "9e15b0a6-d0c3-4018-9272-8ebf0473163c"
 
 # Non-secret configuration. Secrets (SESSION_SECRET, NIMIQ_RPC_AUTH, PRICE_API_KEY)
 # are set with `wrangler secret put <NAME>` and never committed.
 [vars]
 NIMIQ_RPC_URL = "https://rpc.nimiqwatch.com"
 NIMIQ_NETWORK = "main"
-ALLOWED_ORIGINS = "http://localhost:5173"
+ALLOWED_ORIGINS = "https://nimstamp.vercel.app"
 PRICE_SOURCE_URL = "https://api.coingecko.com/api/v3/simple/price?ids=nimiq-2&vs_currencies=usd,eur"
 FX_SOURCE_URL = "https://open.er-api.com/v6/latest/USD"
-APP_URL = "http://localhost:5173"
+APP_URL = "https://nimstamp.vercel.app"
 DEMO_MODE = "0"
