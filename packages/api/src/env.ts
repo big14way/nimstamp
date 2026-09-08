@@ -21,6 +21,6 @@ export function cardLinks(env: Env, cardId: string) {
   return {
     shareUrl: `${base}/c/${cardId}`,
     deepLink: `https://nimpay.app/miniapps/open/${host}/c/${cardId}`,
-    schemeLink: `nimiqpay://miniapp?url=${host}/c/${cardId}`,
+    schemeLink: `nimiqpay://miniapp?url=${encodeURIComponent(`${base}/c/${cardId}`)}`,
   };
 }

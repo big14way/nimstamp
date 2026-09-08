@@ -8,6 +8,7 @@ import { QrCode } from '../components/QrCode';
 import { Banner, Button, Card, ErrorState, Field, inputCls } from '../components/ui';
 import { useWalletAvailable } from '../hooks/useWalletAvailable';
 import { errorCode } from '../lib/errors';
+import { links } from '../lib/links';
 import { store } from '../lib/storage';
 import { getWallet, isWalletError } from '../wallet';
 
@@ -156,9 +157,9 @@ export default function MerchantSetup() {
               <p className="mt-1 text-sm text-ink-soft">{t('setup.laptopHint')}</p>
               {handoff ? (
                 <>
-                  <div className="my-4 flex justify-center"><QrCode value={handoff.deepLink} /></div>
+                  <div className="my-4 flex justify-center"><QrCode value={links.deepLink(`/m/login?handoff=${handoff.nonce}`)} /></div>
                   <p className="text-xs text-ink-soft">{t('setup.laptopWaiting')}</p>
-                  <a href={handoff.deepLink} className="mt-3 inline-block text-sm underline">{t('setup.laptopOpen')}</a>
+                  <a href={links.deepLink(`/m/login?handoff=${handoff.nonce}`)} className="mt-3 inline-block text-sm underline">{t('setup.laptopOpen')}</a>
                   <p className="mt-3 text-xs text-ink-soft">{t('connecting.unlistedNote')}</p>
                 </>
               ) : error ? null : (

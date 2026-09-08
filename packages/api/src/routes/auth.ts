@@ -100,7 +100,7 @@ auth.post('/handoff', async (c) => {
   const base = appUrl(c.env);
   const loginUrl = `${base}/m/login?handoff=${nonce}`;
   const host = base.replace(/^https?:\/\//, '');
-  return c.json({ nonce, expiresAt, loginUrl, deepLink: `https://nimpay.app/miniapps/open/${host}/m/login?handoff=${nonce}` });
+  return c.json({ nonce, expiresAt, loginUrl, deepLink: `https://nimpay.app/miniapps/open/${host}/m/login?handoff=${nonce}`, schemeLink: `nimiqpay://miniapp?url=${encodeURIComponent(loginUrl)}` });
 });
 
 auth.get('/session/:nonce', async (c) => {
