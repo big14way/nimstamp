@@ -15,7 +15,7 @@ export function utf8ToBytes(s: string): Uint8Array {
 }
 
 export function bytesToUtf8(b: Uint8Array): string {
-  return new TextDecoder('utf-8', { fatal: false }).decode(b);
+  return new TextDecoder('utf-8').decode(b);
 }
 
 export function isHex(s: string): boolean {
