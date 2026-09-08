@@ -11,6 +11,7 @@ import { merchants } from './routes/merchants';
 import { payments } from './routes/payments';
 import { redemptions } from './routes/redemptions';
 import { stats } from './routes/stats';
+import { demo } from './routes/demo';
 import { q } from './db/queries';
 import { now } from './lib/time';
 import { PRICE_MAX_AGE } from './price/fetch';
@@ -37,7 +38,7 @@ app.use('*', async (c, next) => {
   return handler(c, next);
 });
 
-// ---- best-effort per-isolate rate limit: 60 req/min per IP
+// ---- best-effort per-isolate rate limit per IP (generous: carrier NAT shares IPs; a card page polls ~20/min)
 const buckets = new Map<string, { n: number; reset: number }>();
 app.use('*', async (c, next) => {
   if (c.req.method === 'OPTIONS' || c.req.path === '/health') return next();
@@ -46,7 +47,7 @@ app.use('*', async (c, next) => {
   const t = now();
   const b = buckets.get(ip);
   if (!b || b.reset <= t) buckets.set(ip, { n: 1, reset: t + 60 });
-  else if (++b.n > 60) throw new ApiError('RATE_LIMITED');
+  else if (++b.n > 300) throw new ApiError('RATE_LIMITED');
   if (buckets.size > 5000) for (const [k, v] of buckets) if (v.reset <= t) buckets.delete(k);
   await next();
 });
@@ -65,6 +66,7 @@ app.route('/', cards);
 app.route('/payments', payments);
 app.route('/', redemptions);
 app.route('/', stats);
+app.route('/demo', demo);
 
 app.notFound((c) => c.json(new ApiError('NOT_FOUND').toJSON(), 404));
 app.onError((err, c) => {
