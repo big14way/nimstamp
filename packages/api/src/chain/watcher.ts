@@ -1,6 +1,6 @@
 import type { Env } from '../env';
 import { q, type CardRow, type CustomerCardRow, type IntentRow, type MerchantRow, type StampRow } from '../db/queries';
-import { normalizeAddress } from '../lib/address';
+import { normalizeAddress, sameAddress } from '../lib/address';
 import { newRowId } from '../lib/ids';
 import { buildMemo } from '../lib/memo';
 import { now } from '../lib/time';
@@ -57,7 +57,10 @@ export async function processTx(
     return { status: 'skipped', code: 'TX_WRONG_SENDER' };
   }
 
-  const result = evaluate({ tx, merchantAddress: merchant.address, card, intent, customerCard, relaxed });
+  const result = evaluate({ tx, merchantAddress: merchant.address, card, intent, customerCard, relaxed, matchedBy: cls.kind === 'memo' ? 'memo' : 'sender' });
+  if (result.ok && cls.kind === 'memo' && customerCard && !sameAddress(customerCard.address, tx.from)) {
+    console.log(`stamp sender differs from card address card=${card.id} (memo nonce matched)`);
+  }
   if (!result.ok) {
     if (intent && result.code === 'AMOUNT_TOO_LOW') {
       await db.prepare('UPDATE payment_intents SET last_error = ? WHERE id = ?').bind('AMOUNT_TOO_LOW', intent.id).run();

@@ -20,13 +20,17 @@ describe('evaluate', () => {
   it('rejects below minimum', () => expect(evaluate({ ...base, tx: tx({ value: 4999 }) })).toEqual({ ok: false, code: 'AMOUNT_TOO_LOW' }));
   it('rejects wrong recipient', () => expect(evaluate({ ...base, tx: tx({ to: CUSTOMER }) })).toEqual({ ok: false, code: 'TX_WRONG_RECIPIENT' }));
   it('rejects unconfirmed', () => expect(evaluate({ ...base, tx: tx({ blockNumber: null }) })).toEqual({ ok: false, code: 'TX_NOT_FOUND' }));
-  it('rejects a sender that is not the intent owner', () => expect(evaluate({ ...base, tx: tx({ from: MERCHANT }) })).toEqual({ ok: false, code: 'TX_WRONG_SENDER' }));
+  it('rejects a sender that is not the intent owner (sender-resolved match)', () => expect(evaluate({ ...base, tx: tx({ from: MERCHANT }) })).toEqual({ ok: false, code: 'TX_WRONG_SENDER' }));
+  it('accepts another sender when the memo nonce matched (Nimiq Pay may pay from a second account)', () =>
+    expect(evaluate({ ...base, matchedBy: 'memo', tx: tx({ from: MERCHANT }) })).toEqual({ ok: true, velocityBlocked: false }));
   it('rejects missing intent', () => expect(evaluate({ ...base, intent: null })).toEqual({ ok: false, code: 'TX_NO_INTENT' }));
   it('rejects an intent for another card', () => expect(evaluate({ ...base, intent: { ...intent, card_id: 'OTHER123' } })).toEqual({ ok: false, code: 'TX_NO_INTENT' }));
   it('rejects expired intents (with 60 s grace)', () => {
     expect(evaluate({ ...base, intent: { ...intent, expires_at: T - 30 } })).toEqual({ ok: true, velocityBlocked: false });
     expect(evaluate({ ...base, intent: { ...intent, expires_at: T - 61 } })).toEqual({ ok: false, code: 'INTENT_EXPIRED' });
-    expect(evaluate({ ...base, intent: { ...intent, status: 'expired' } })).toEqual({ ok: false, code: 'INTENT_EXPIRED' });
+    // status flipped by the cron, but the tx happened before expiry: still counts
+    expect(evaluate({ ...base, intent: { ...intent, status: 'expired' } })).toEqual({ ok: true, velocityBlocked: false });
+    expect(evaluate({ ...base, intent: { ...intent, status: 'expired', expires_at: T - 61 } })).toEqual({ ok: false, code: 'INTENT_EXPIRED' });
   });
   it('manual claim accepts expired intents up to 24h old', () => {
     expect(evaluate({ ...base, relaxed: true, intent: { ...intent, status: 'expired', expires_at: T - 7200, created_at: T - 8000 } })).toEqual({ ok: true, velocityBlocked: false });

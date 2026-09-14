@@ -17,6 +17,13 @@ export interface MatchInput {
   customerCard: CustomerCardRow | null;
   /** manual claim relaxes the expiry rule (intent may be expired, ≤ 24 h old) */
   relaxed: boolean;
+  /**
+   * How the intent was resolved. A memo carries a single-use, unguessable nonce bound to the
+   * customer card, so the sender does not have to equal the card's address: Nimiq Pay may pay
+   * from a different account than the one `listAccounts()` listed first. Sender-resolved
+   * (Plan B) matches still require the address to match.
+   */
+  matchedBy?: 'memo' | 'sender';
 }
 
 export type MatchResult = { ok: true; velocityBlocked: boolean } | { ok: false; code: MatchFailure };
@@ -25,18 +32,20 @@ export const txTimeSec = (tx: RpcTx) => Math.floor((tx.timestamp || 0) / 1000);
 
 /** Pure §7.3 rules. Callers resolve the intent (by memo or by sender) before calling. */
 export function evaluate(input: MatchInput): MatchResult {
-  const { tx, merchantAddress, card, intent, customerCard, relaxed } = input;
+  const { tx, merchantAddress, card, intent, customerCard, relaxed, matchedBy = 'sender' } = input;
   if (!sameAddress(tx.to, merchantAddress)) return { ok: false, code: 'TX_WRONG_RECIPIENT' };
   if (tx.blockNumber == null || tx.executionResult === false) return { ok: false, code: 'TX_NOT_FOUND' };
   if (!intent || !customerCard) return { ok: false, code: 'TX_NO_INTENT' };
   if (intent.card_id !== card.id || customerCard.card_id !== card.id) return { ok: false, code: 'TX_NO_INTENT' };
-  if (!sameAddress(customerCard.address, tx.from)) return { ok: false, code: 'TX_WRONG_SENDER' };
+  if (matchedBy !== 'memo' && !sameAddress(customerCard.address, tx.from)) return { ok: false, code: 'TX_WRONG_SENDER' };
 
   const t = txTimeSec(tx);
   if (intent.status === 'matched') return { ok: false, code: 'TX_NO_INTENT' };
   if (relaxed) {
     if (intent.created_at < t - 86400) return { ok: false, code: 'INTENT_EXPIRED' };
-  } else if (intent.status !== 'pending' || intent.expires_at <= t - 60) {
+  } else if (intent.expires_at <= t - 60) {
+    // Judged by the tx time, not by the current status: a payment made in time still counts
+    // even if the cron flipped the intent to 'expired' before the watcher saw the block.
     return { ok: false, code: 'INTENT_EXPIRED' };
   }
   if (tx.value < intent.expected_luna) return { ok: false, code: 'AMOUNT_TOO_LOW' };
