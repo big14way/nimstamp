@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Button, ErrorState, Notice, Sheet } from '../components/ui';
 import { useWalletAvailable } from '../hooks/useWalletAvailable';
@@ -14,6 +14,7 @@ export default function MerchantLogin() {
   const [params] = useSearchParams();
   const handoff = params.get('handoff') ?? undefined;
   const available = useWalletAvailable();
+  const nav = useNavigate();
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{ hasMerchant: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +24,11 @@ export default function MerchantLogin() {
     const id = setTimeout(() => setSlow(true), 5000);
     return () => clearTimeout(id);
   }, []);
+
+  // A laptop that lands here directly (no wallet, no handoff nonce) belongs on the QR handoff screen.
+  useEffect(() => {
+    if (available === false && !handoff) nav('/m/setup', { replace: true });
+  }, [available, handoff, nav]);
 
   const signIn = async () => {
     setBusy(true);
