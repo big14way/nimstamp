@@ -12,3 +12,5 @@ coverage/
 # Raw demo recordings (keep only the finished cut)
 docs/demo/*
 
+!docs/demo/demo.json
+!docs/demo/brand/

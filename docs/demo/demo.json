@@ -1,0 +1,222 @@
+{
+  "clips_dir": ".",
+  "work_dir": ".demo-build",
+  "output": "nimstamp-pitch.mp4",
+  "voice": "en-US-AndrewMultilingualNeural",
+  "voice_rate": "-4%",
+  "crossfade": 0.5,
+  "brand": {
+    "name": "NimStamp",
+    "domain": "nimstamp.vercel.app",
+    "logo": "brand/logo.png",
+    "logo_inverse": "brand/logo-inverse.png",
+    "paper": "#FAF8F3",
+    "paper_deep": "#F1EEE6",
+    "ink": "#14162A",
+    "ink_soft": "#5B5E78",
+    "ink_faint": "#8A8CA3",
+    "accent": "#2E36D2",
+    "accent_soft": "#C9CCFF",
+    "fonts": {
+      "display": "/Users/gwill/.claude/skills/demo-video/assets/fonts/barlowsc-700.ttf",
+      "bold": "/Users/gwill/.claude/skills/demo-video/assets/fonts/barlow-700.ttf",
+      "semi": "/Users/gwill/.claude/skills/demo-video/assets/fonts/barlow-600.ttf"
+    }
+  },
+  "scenes": [
+    {
+      "id": "s0",
+      "kind": "title",
+      "tagline": "Loyalty stamp cards that live inside Nimiq Pay",
+      "tag": "Nimiq Mini Apps Competition · Cycle II",
+      "vo": "This is NimStamp. A loyalty stamp card that lives inside Nimiq Pay."
+    },
+    {
+      "id": "p1",
+      "kind": "slide",
+      "label": "The problem",
+      "head": "Small businesses want repeat customers. Loyalty tools were never built for them.",
+      "bullets": [
+        {
+          "k": "Paper punch cards",
+          "v": "get lost, get forged, and tell the owner nothing."
+        },
+        {
+          "k": "Loyalty apps",
+          "v": "charge monthly fees and need a POS integration a market stall will never have."
+        },
+        {
+          "k": "Crypto customers",
+          "v": "pay a merchant in NIM today and get nothing back for their loyalty."
+        }
+      ],
+      "vo": "Small businesses live on repeat customers, but loyalty tools were never built for them. Paper cards get lost and forged. Loyalty apps charge monthly fees and need a point of sale. And customers who pay in crypto get nothing back."
+    },
+    {
+      "id": "p2",
+      "kind": "slide",
+      "label": "The gap",
+      "head": "Nimiq Pay has the wallet and the payments. It has no self-serve loyalty.",
+      "columns": 2,
+      "row_h": 150,
+      "bullets": [
+        {
+          "k": "Nimiq rewards today",
+          "v": "Work only at curated partner locations, onboarded one by one."
+        },
+        {
+          "k": "NimStamp",
+          "v": "Any merchant, anywhere, sets up a card in 60 seconds. No approval, no integration."
+        },
+        {
+          "k": "For the customer",
+          "v": "Stamps arrive automatically with every NIM payment. Nothing to scan."
+        },
+        {
+          "k": "For Nimiq",
+          "v": "Every stamp is a real NIM payment on chain. Loyalty becomes a reason to pay in NIM."
+        }
+      ],
+      "vo": "Nimiq Pay has the wallet and the payments, but its rewards only work at curated partner locations. NimStamp fills that gap: any merchant, anywhere, self-serve, in sixty seconds. And every stamp is a real NIM payment on chain."
+    },
+    {
+      "id": "s1",
+      "kind": "phone",
+      "src": "clip 1 of 2.MP4",
+      "cut": [
+        0.0,
+        18.0
+      ],
+      "max_speed": 1.35,
+      "step": "01",
+      "head": "Pay in NIM. Earn a stamp.",
+      "sub": "The customer opens the café’s link inside Nimiq Pay and taps Pay. The wallet attaches a tagged memo, and the server matches the payment on the Nimiq blockchain.",
+      "vo": "Here it is live. A customer opens the café's card link and taps Pay. Nimiq Pay shows the amount with a tagged memo. Once the payment is confirmed on the Nimiq blockchain, the stamp appears. No QR scanning, and nothing for the cashier to do."
+    },
+    {
+      "id": "s2",
+      "kind": "phone",
+      "src": "clip 1 of 3.MP4",
+      "cut": [
+        2.0,
+        19.0
+      ],
+      "max_speed": 1.5,
+      "step": "02",
+      "head": "Redeem with a signature.",
+      "sub": "A full card unlocks Redeem. The wallet signs a message, the server verifies it, and a four-letter code appears for the cashier.",
+      "vo": "When the card is full, the customer taps Redeem and signs a message with their wallet. The server verifies the signature and issues a four-letter code for the cashier."
+    },
+    {
+      "id": "s3",
+      "kind": "phone",
+      "src": "clip 5.MP4",
+      "cut": [
+        [
+          1.5,
+          4.6
+        ],
+        [
+          9.5,
+          17.5
+        ]
+      ],
+      "max_speed": 1.4,
+      "step": "03",
+      "head": "Merchants sign in by QR.",
+      "sub": "Scan the laptop’s QR with the phone that receives payments. No passwords, no accounts, no crypto knowledge needed.",
+      "vo": "Merchants sign in on a laptop by scanning a QR code with the phone that receives their payments. No passwords, no accounts."
+    },
+    {
+      "id": "s4",
+      "kind": "laptop",
+      "src": "clip 3.mov",
+      "cut": [
+        73.0,
+        89.0
+      ],
+      "max_speed": 1.6,
+      "crop": [
+        1624,
+        1900,
+        700,
+        64
+      ],
+      "step": "04",
+      "head": "Confirm the reward.",
+      "sub": "The dashboard lists customers, stamps and every payment with its on-chain link. One click confirms the code.",
+      "vo": "The dashboard shows customers, stamps, and every payment linked to the chain. The cashier confirms the code, and the reward is done."
+    },
+    {
+      "id": "s5",
+      "kind": "laptop",
+      "src": "clip 4.mov",
+      "cut": [
+        10.0,
+        30.0
+      ],
+      "max_speed": 1.6,
+      "crop": [
+        1624,
+        1900,
+        700,
+        64
+      ],
+      "step": "05",
+      "head": "Public, verifiable stats.",
+      "sub": "Live numbers for every business on NimStamp. Each stamp links to its transaction on nimiq.watch.",
+      "vo": "Everything is public. The stats page shows live numbers, and every stamp links to its transaction on nimiq dot watch."
+    },
+    {
+      "id": "r1",
+      "kind": "slide",
+      "label": "How it makes money",
+      "head": "Free for every merchant. Paid for by the rewards it creates.",
+      "columns": 2,
+      "row_h": 150,
+      "bullets": [
+        {
+          "k": "Free tier",
+          "v": "One card, unlimited customers and stamps. Free forever, so adoption is never blocked by price."
+        },
+        {
+          "k": "Redemption fee",
+          "v": "A small NIM fee on each redeemed reward, paid only when loyalty actually worked."
+        },
+        {
+          "k": "Pro for chains",
+          "v": "Multiple locations, staff logins, analytics and branded cards on a monthly NIM plan."
+        },
+        {
+          "k": "Grows Nimiq",
+          "v": "Every stamp is a NIM payment to a real merchant. More stamps, more NIM in circulation."
+        }
+      ],
+      "vo": "Every merchant gets one card free forever, so price never blocks adoption. NimStamp earns a small NIM fee on each redeemed reward, and a Pro plan for chains adds locations, staff logins, analytics and branded cards. Every stamp is a NIM payment, so NimStamp grows the Nimiq economy as it grows."
+    },
+    {
+      "id": "s6",
+      "kind": "end",
+      "lines": [
+        "Any merchant, anywhere,",
+        "set up in 60 seconds."
+      ],
+      "links": [
+        [
+          "Open",
+          "nimstamp.vercel.app"
+        ],
+        [
+          "Source",
+          "github.com/big14way/nimstamp"
+        ],
+        [
+          "Live stats",
+          "nimstamp.vercel.app/stats"
+        ]
+      ],
+      "footer": "MIT licensed · Runs inside Nimiq Pay · NIM payments, message signing, device ID, language API",
+      "vo": "Nimiq's built-in rewards work at partner locations. NimStamp lets any merchant, anywhere, set up loyalty in sixty seconds."
+    }
+  ]
+}
