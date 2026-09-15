@@ -89,6 +89,9 @@ The interface is a recharge scratch card: one committed ultramarine panel on war
 - Anti-abuse: server-side fiat minimum, per-device card cap, hashed-IP cap when the device ID is declined, one stamp per 10 minutes per customer (merchant-adjustable), single-use nonces, UNIQUE transaction hashes, expiring intents / challenges / codes.
 - Privacy notice: [docs/PRIVACY.md](docs/PRIVACY.md), served at `/privacy` in four languages. Device-ID request carries the reason "Prevent duplicate loyalty cards on this phone".
 
+## Demo video
+79-second narrated walkthrough: customer pays and earns a stamp, redeems with a wallet signature, merchant signs in by QR, confirms the code on the dashboard, and the public stats page. YouTube link: see [docs/SUBMISSION.md](docs/SUBMISSION.md).
+
 ## Live app
 - Web: https://nimstamp.vercel.app (Vercel)
 - Open inside Nimiq Pay: https://nimpay.app/miniapps/open/nimstamp.vercel.app

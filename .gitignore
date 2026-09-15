@@ -8,3 +8,7 @@ dist/
 .DS_Store
 coverage/
 .dev.vars
+
+# Raw demo recordings (keep only the finished cut)
+docs/demo/*
+
