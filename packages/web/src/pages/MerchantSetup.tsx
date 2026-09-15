@@ -52,7 +52,6 @@ export default function MerchantSetup() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [handoff, setHandoff] = useState<{ nonce: string; deepLink: string; loginUrl: string } | null>(null);
-  const pollRef = useRef<number | null>(null);
 
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
@@ -78,38 +77,53 @@ export default function MerchantSetup() {
       .catch(() => setStep(1));
   }, [nav]);
 
-  // Laptop flow: no wallet → QR handoff + polling
+  // Laptop flow: no wallet → create a QR handoff once.
   useEffect(() => {
     if (available !== false || step !== 1 || handoff) return;
     let cancelled = false;
     api
       .handoff()
       .then((h) => {
-        if (cancelled) return;
-        setHandoff(h);
-        pollRef.current = window.setInterval(async () => {
-          try {
-            const r = await api.handoffSession(h.nonce);
-            if (r.token) {
-              session.set(r.token);
-              if (pollRef.current) clearInterval(pollRef.current);
-              if (r.merchant) nav('/m', { replace: true });
-              else setStep(2);
-            }
-          } catch (e) {
-            if (errorCode(e) === 'CHALLENGE_EXPIRED') {
-              if (pollRef.current) clearInterval(pollRef.current);
-              setHandoff(null);
-            }
-          }
-        }, 2000);
+        if (!cancelled) setHandoff(h);
       })
       .catch((e) => setError(errorCode(e)));
     return () => {
       cancelled = true;
-      if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [available, step, handoff, nav]);
+  }, [available, step, handoff]);
+
+  // …then poll for the phone's signature until the handoff is consumed or expires.
+  // Kept separate from the effect above: a single effect keyed on `handoff` would clear its own
+  // interval the moment the handoff was created.
+  const nonce = handoff?.nonce ?? null;
+  useEffect(() => {
+    if (!nonce) return;
+    let stopped = false;
+    const tick = async () => {
+      if (stopped) return;
+      try {
+        const r = await api.handoffSession(nonce);
+        if (r.token) {
+          stopped = true;
+          clearInterval(id);
+          session.set(r.token);
+          if (r.merchant) nav('/m', { replace: true });
+          else setStep(2);
+        }
+      } catch (e) {
+        if (errorCode(e) === 'CHALLENGE_EXPIRED') {
+          stopped = true;
+          clearInterval(id);
+          setHandoff(null); // the first effect issues a fresh QR
+        }
+      }
+    };
+    const id = window.setInterval(() => void tick(), 2000);
+    return () => {
+      stopped = true;
+      clearInterval(id);
+    };
+  }, [nonce, nav]);
 
   const signIn = async () => {
     setBusy(true);
