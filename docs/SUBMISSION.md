@@ -7,7 +7,7 @@ Submit at https://miniappscompetition.com/submit before **18 Sep 2026, 23:59 UTC
 - Open inside Nimiq Pay: https://nimpay.app/miniapps/open/nimstamp.vercel.app
 - Source (MIT): https://github.com/big14way/nimstamp
 - Live stats: https://nimstamp.vercel.app/stats
-- Demo video: `docs/demo/nimstamp-demo.mp4` → upload to YouTube (public) and paste the link here: **TODO**
+- Demo video: https://youtu.be/_u_yXShSigw
 - Listing request: https://github.com/nimiq/awesome/pull/31
 
 ## Description (≤ 250 words) — 214 words
@@ -24,7 +24,7 @@ For coffee shops, barbers, market stalls and anyone else who takes NIM.
 
 ## Before submitting
 - [ ] Replace the bracketed numbers in the description with the live figures from `/stats`.
-- [ ] Upload the demo video to YouTube (public, captions on) and add the link above.
+- [x] Demo video on YouTube: https://youtu.be/_u_yXShSigw
 - [ ] Lead's NIM payout address ready.
 - [ ] Team listed in README (lead: Godswill Idolor, @big14way).
 - [ ] Promotion: Skool intro post, ≥ 3 stats posts, ≥ 2 Sip & Ship calls, X account ≥ 4 posts, forum post.

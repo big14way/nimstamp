@@ -90,7 +90,7 @@ The interface is a recharge scratch card: one committed ultramarine panel on war
 - Privacy notice: [docs/PRIVACY.md](docs/PRIVACY.md), served at `/privacy` in four languages. Device-ID request carries the reason "Prevent duplicate loyalty cards on this phone".
 
 ## Demo video
-79-second narrated walkthrough: customer pays and earns a stamp, redeems with a wallet signature, merchant signs in by QR, confirms the code on the dashboard, and the public stats page. YouTube link: see [docs/SUBMISSION.md](docs/SUBMISSION.md).
+**[Watch on YouTube](https://youtu.be/_u_yXShSigw)** — problem, gap, live walkthrough (pay and earn a stamp, redeem with a wallet signature, merchant QR sign-in, dashboard confirmation, public stats) and the business model.
 
 ## Live app
 - Web: https://nimstamp.vercel.app (Vercel)
